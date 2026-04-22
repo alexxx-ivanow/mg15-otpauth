@@ -1,0 +1,84 @@
+<?php if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die(); 
+
+$this->setFrameMode(false);
+?>
+
+<div class="otp-auth" id="otp-auth" data-action="<?=$componentPath?>">
+
+    <!-- Шаг 1 -->
+    <div class="otp-step otp-step-login" id="otp-step-login">
+
+        <div class="otp-title">
+            Вход или регистрация
+        </div>
+
+        <div class="otp-row">
+            <input
+                type="text"
+                id="auth-login"
+                name="login"
+                class="otp-input"
+                placeholder="Телефон или Email"
+                autocomplete="off"
+            >
+        </div>
+
+        <div class="otp-hint" id="auth-hint"></div>
+
+        <div class="otp-row">
+            <button type="button" class="otp-btn" id="send-code-btn">
+                Получить код
+            </button>
+        </div>
+
+    </div>
+
+
+    <!-- Шаг 2 -->
+    <div class="otp-step otp-step-code" id="otp-step-code" style="display:none;">
+
+        <div class="otp-title">
+            Введите код
+        </div>
+
+        <div class="otp-subtitle" id="otp-destination"></div>
+
+        <div class="otp-row">
+            <input
+                type="text"
+                id="auth-code"
+                class="otp-input"
+                placeholder="6 цифр"
+                maxlength="6"
+                autocomplete="one-time-code"
+            >
+        </div>
+
+        <div class="otp-row">
+            <button type="button" class="otp-btn" id="check-code-btn">
+                Войти
+            </button>
+        </div>
+
+        <div class="otp-row">
+            <button type="button" class="otp-btn-light" id="back-btn">
+                Назад
+            </button>
+        </div>
+
+    </div>
+
+    <div class="otp-message" id="otp-message"></div>
+
+</div>
+
+
+<script>
+const otpConfig = {
+    max_attempts: '<?=CUtil::JSEscape($arParams["MAX_ATTEMPTS"])?>',
+    code_ttl_minutes: '<?=CUtil::JSEscape($arParams["CODE_TTL_MINUTES"])?>',
+    cooldown_seconds: '<?=CUtil::JSEscape($arParams["COOLDOWN_SECONDS"])?>',
+    max_per_hour: '<?=CUtil::JSEscape($arParams["MAX_PER_HOUR"])?>',
+    add_group: '<?=CUtil::JSEscape(implode(',', $arParams["ADD_GROUP"]))?>',
+};
+</script>
