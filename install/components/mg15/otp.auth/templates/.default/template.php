@@ -3,10 +3,10 @@
 $this->setFrameMode(false);
 ?>
 
-<div class="otp-auth" id="otp-auth" data-action="<?=$componentPath?>">
+<div class="otp-auth" id="js-otp-auth" data-action="<?=$componentPath?>">
 
     <!-- Шаг 1 -->
-    <div class="otp-step otp-step-login" id="otp-step-login">
+    <div class="otp-step otp-step-login" id="js-otp-step-login">
 
         <div class="otp-title">
             Вход или регистрация
@@ -15,7 +15,7 @@ $this->setFrameMode(false);
         <div class="otp-row">
             <input
                 type="text"
-                id="auth-login"
+                id="js-auth-login"
                 name="login"
                 class="otp-input"
                 placeholder="Телефон или Email"
@@ -23,11 +23,17 @@ $this->setFrameMode(false);
             >
         </div>
 
-        <div class="otp-hint" id="auth-hint"></div>
+        <div class="otp-hint" id="js-auth-hint"></div>
 
         <div class="otp-row">
-            <button type="button" class="otp-btn" id="send-code-btn">
+            <button type="button" class="otp-btn" id="js-send-code-btn">
                 Получить код
+            </button>
+        </div>
+
+        <div class="otp-row">
+            <button type="button" class="otp-btn-light" id="js-next-btn">
+                Ввести код
             </button>
         </div>
 
@@ -35,18 +41,18 @@ $this->setFrameMode(false);
 
 
     <!-- Шаг 2 -->
-    <div class="otp-step otp-step-code" id="otp-step-code" style="display:none;">
+    <div class="otp-step otp-step-code" id="js-otp-step-code" style="display:none;">
 
         <div class="otp-title">
             Введите код
         </div>
 
-        <div class="otp-subtitle" id="otp-destination"></div>
+        <div class="otp-subtitle" id="js-otp-destination"></div>
 
         <div class="otp-row">
             <input
                 type="text"
-                id="auth-code"
+                id="js-auth-code"
                 class="otp-input"
                 placeholder="6 цифр"
                 maxlength="6"
@@ -55,20 +61,20 @@ $this->setFrameMode(false);
         </div>
 
         <div class="otp-row">
-            <button type="button" class="otp-btn" id="check-code-btn">
+            <button type="button" class="otp-btn" id="js-check-code-btn">
                 Войти
             </button>
         </div>
 
         <div class="otp-row">
-            <button type="button" class="otp-btn-light" id="back-btn">
+            <button type="button" class="otp-btn-light" id="js-back-btn">
                 Назад
             </button>
         </div>
 
     </div>
 
-    <div class="otp-message" id="otp-message"></div>
+    <div class="otp-message" id="js-otp-message"></div>
 
 </div>
 
@@ -77,8 +83,7 @@ $this->setFrameMode(false);
 const otpConfig = {
     max_attempts: '<?=CUtil::JSEscape($arParams["MAX_ATTEMPTS"])?>',
     code_ttl_minutes: '<?=CUtil::JSEscape($arParams["CODE_TTL_MINUTES"])?>',
-    cooldown_seconds: '<?=CUtil::JSEscape($arParams["COOLDOWN_SECONDS"])?>',
-    max_per_hour: '<?=CUtil::JSEscape($arParams["MAX_PER_HOUR"])?>',
+    cooldown_seconds: '<?=CUtil::JSEscape($arParams["COOLDOWN_SECONDS"])?>',    
     add_group: '<?=CUtil::JSEscape(implode(',', $arParams["ADD_GROUP"]))?>',
 };
 </script>

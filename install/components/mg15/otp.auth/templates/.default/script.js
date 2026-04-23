@@ -1,22 +1,42 @@
 document.addEventListener('DOMContentLoaded', function(){
 
-    const loginWrap  = document.getElementById('otp-auth');
+    const loginWrap  = document.getElementById('js-otp-auth');
     const actionPath = loginWrap.getAttribute('data-action');
 
-    const loginInput  = document.getElementById('auth-login');
-    const codeInput   = document.getElementById('auth-code');
+    const loginInput  = document.getElementById('js-auth-login');
+    const codeInput   = document.getElementById('js-auth-code');
 
-    const sendBtn     = document.getElementById('send-code-btn');
-    const checkBtn    = document.getElementById('check-code-btn');
-    const backBtn     = document.getElementById('back-btn');
+    const sendBtn     = document.getElementById('js-send-code-btn');
+    const checkBtn    = document.getElementById('js-check-code-btn');
+    const backBtn     = document.getElementById('js-back-btn');
+    const nextBtn     = document.getElementById('js-next-btn');
 
-    const hint        = document.getElementById('auth-hint');
-    const msg         = document.getElementById('otp-message');
+    const hint        = document.getElementById('js-auth-hint');
+    const msg         = document.getElementById('js-otp-message');
 
-    const stepLogin   = document.getElementById('otp-step-login');
-    const stepCode    = document.getElementById('otp-step-code');
+    const stepLogin   = document.getElementById('js-otp-step-login');
+    const stepCode    = document.getElementById('js-otp-step-code');
 
-    const destination = document.getElementById('otp-destination');
+    const destination = document.getElementById('js-otp-destination');
+
+
+    nextBtn.style.display = 'none';
+
+    const saved = localStorage.getItem('otp_login');
+
+    if (saved) {
+        loginInput.value = saved;
+    }
+
+    if (localStorage.getItem('otp_step') === 'code') {
+        stepCode.style.display = 'block';
+        stepLogin.style.display = 'none';
+
+        if(loginInput.value !== '') {
+            nextBtn.style.display = 'block';
+            destination.innerHTML = 'Код отправлен на: ' + loginInput.value;
+        }
+    }        
 
 
     function showMessage(text, type='error')
@@ -82,6 +102,15 @@ document.addEventListener('DOMContentLoaded', function(){
         } else {
             hint.innerHTML = '';
         }
+
+        if(value == '') {
+            nextBtn.style.display = 'none';    
+        } else if(localStorage.getItem('otp_step') === 'code') {
+            nextBtn.style.display = 'block';
+        }
+        
+        
+        localStorage.setItem('otp_login', this.value);
     });
 
 
@@ -101,6 +130,7 @@ document.addEventListener('DOMContentLoaded', function(){
             method: 'POST',
             dataType: 'json',
             data: {
+                sessid: BX.bitrix_sessid(),
                 action: 'send',
                 login: login,
                 config: otpConfig
@@ -119,6 +149,11 @@ document.addEventListener('DOMContentLoaded', function(){
                 codeInput.focus();
 
                 showMessage(response.message, 'success');
+
+                localStorage.setItem('otp_step', 'code');
+
+                /*const end = Date.now() + 60000;
+                localStorage.setItem('otp_timer_end', end);*/
             }
         });
 
@@ -134,6 +169,7 @@ document.addEventListener('DOMContentLoaded', function(){
             method: 'POST',
             dataType: 'json',
             data: {
+                sessid: BX.bitrix_sessid(),
                 action: 'check',
                 login: loginInput.value,
                 code: codeInput.value,
@@ -145,6 +181,10 @@ document.addEventListener('DOMContentLoaded', function(){
                     showMessage(response.message);
                     return;
                 }
+
+                localStorage.removeItem('otp_login');
+                localStorage.removeItem('otp_step');
+                localStorage.removeItem('otp_timer_end');
 
                 showMessage(response.message, 'success');
 
@@ -164,6 +204,20 @@ document.addEventListener('DOMContentLoaded', function(){
 
         codeInput.value = '';
         clearMessage();
+    });
+
+    nextBtn.addEventListener('click', function(){
+
+        console.log(loginInput.value);
+
+        if(loginInput.value != '') {
+            stepCode.style.display = 'block';
+            stepLogin.style.display = 'none';
+
+            codeInput.value = '';
+            clearMessage();
+        }
+        
     });
 
 });

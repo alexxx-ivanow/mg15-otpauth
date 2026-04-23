@@ -6,6 +6,7 @@ use Bitrix\Main\Loader;
 
 class OtpAuthComponent extends CBitrixComponent
 {
+
     public function executeComponent()
     {
 

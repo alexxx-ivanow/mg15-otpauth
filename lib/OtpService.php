@@ -11,13 +11,10 @@ class OtpService
 {
     private static $max_attempts = 3;
     private static $code_ttl_minutes = 5;
-    private static $cooldown_seconds = 60;
-    private static $max_per_hour = 5;    
+    private static $cooldown_seconds = 60;    
     private static $add_group = '';    
 
-    /**
-     * отправка проверочного кода
-     */
+    // отправка проверочного кода
     public static function send(string $login, array $config = []): array
     {
         $login = self::normalizeLogin($login);
@@ -30,12 +27,8 @@ class OtpService
         }
 
         if (self::isCooldown($login)) {
-            return self::error('Повторная отправка через 1 минуту');
+            return self::error('Повторная отправка через ' . self::$cooldown_seconds . ' секунд');
         }
-
-        /*if (self::isLimitExceeded($login)) {
-            return self::error('Превышен лимит отправок');
-        }*/
 
         $code = self::generateCode();        
 
@@ -55,9 +48,7 @@ class OtpService
         return self::success('Код отправлен');
     }
 
-    /**
-     * проверка кода
-     */
+    // проверка кода
     public static function check(string $login, string $code, array $config = []): array
     {
 
@@ -111,9 +102,7 @@ class OtpService
     }
 
 
-    /**
-     * применяем конфиг из настроек компонента
-     */
+    // применяем конфиг из настроек компонента
     private static function applyConfig(array $config = []): void
     {
         if (!empty($config['max_attempts'])) {
@@ -127,19 +116,13 @@ class OtpService
         if (!empty($config['cooldown_seconds'])) {
             self::$cooldown_seconds = (int)$config['cooldown_seconds'];
         }
-
-        if (!empty($config['max_per_hour'])) {
-            self::$max_per_hour = (int)$config['max_per_hour'];
-        }
-
+        
         if (!empty($config['add_group'])) {
             self::$add_group = (string)$config['add_group'];
         }        
     }
 
-    /**
-     * авторизация/регистрация пользователя
-     */
+    // авторизация/регистрация пользователя
     private static function getOrCreateUser(string $login): int
     {
         $type = self::detectType($login);
@@ -168,8 +151,8 @@ class OtpService
         if ($type === 'email') {
             $fields['EMAIL'] = $login;
         } else {
-            $fields['PERSONAL_PHONE'] = $login;
-            $fields['EMAIL'] = $login . '@local.ru';
+            $fields['PERSONAL_PHONE'] = $login;            
+            //$fields['EMAIL'] = $login . '@local.ru';
         }
 
         $userId = (int)$user->Add($fields);
@@ -188,9 +171,7 @@ class OtpService
         return $userId;         
     }
 
-    /**
-     * пауза перед повторной отправкой кода
-     */
+    // пауза перед повторной отправкой кода
     private static function isCooldown(string $login): bool
     {
         $row = OtpTable::getList([
@@ -205,27 +186,14 @@ class OtpService
         return (bool)$row;
     }
 
-    /*private static function isLimitExceeded(string $login): bool
-    {
-        $count = OtpTable::getCount([
-            '=LOGIN' => $login,
-            '>=CREATED_AT' => (new DateTime())->add('-1 hour')
-        ]);
-
-        return $count >= self::$max_per_hour;
-    }*/
-
-    /**
-     * генерация кода
-     */
+    // генерация кода
     private static function generateCode(): string
     {
         return (string)random_int(100000, 999999);
     }
 
-    /**
-     * отправка кода
-     */
+
+    // отправка кода
     private static function sendCode(string $login, string $code, string $type): void
     {
         if ($type === 'email') {
@@ -257,11 +225,7 @@ class OtpService
         self::markUsed($id);
     }
 
-    /**
-     * =====================================
-     * HELPERS
-     * =====================================
-     */
+    // helpers
     private static function detectType(string $value): string
     {
         return filter_var($value, FILTER_VALIDATE_EMAIL)
