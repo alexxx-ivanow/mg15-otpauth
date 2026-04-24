@@ -5,6 +5,7 @@ namespace Otp;
 use Bitrix\Main\UserTable;
 use Bitrix\Main\Type\DateTime;
 use Bitrix\Main\Context;
+use Bitrix\Main\Config\Option;
 use CUser;
 
 class OtpService
@@ -76,7 +77,7 @@ class OtpService
 
         if ($row['EXPIRE_AT']->getTimestamp() < time()) {
             self::expire($row['ID']);
-            return self::error('Код истёк');
+            return self::error('Срок кода истёк');
         }
 
         if ($row['ATTEMPTS'] >= self::$max_attempts) {        
@@ -151,8 +152,12 @@ class OtpService
         if ($type === 'email') {
             $fields['EMAIL'] = $login;
         } else {
-            $fields['PERSONAL_PHONE'] = $login;            
-            //$fields['EMAIL'] = $login . '@local.ru';
+            $fields['PERSONAL_PHONE'] = $login;        
+
+            // если email обязателен при регистрации - добавляем фейковый
+            if (Option::get('main', 'new_user_email_required', 'N') === 'Y') {
+                $fields['EMAIL'] = $login . '@local.ru';
+            }    
         }
 
         $userId = (int)$user->Add($fields);

@@ -3,6 +3,7 @@
 if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 
 use Bitrix\Main\Loader;
+use Bitrix\Main\Application;
 
 class OtpAuthComponent extends CBitrixComponent
 {
@@ -12,12 +13,20 @@ class OtpAuthComponent extends CBitrixComponent
 
         global $USER;
 
-        // если пользователь уже авторизован — редирект
+        // если пользователь авторизован — редирект
         if ($USER->IsAuthorized())
         {
-            $redirect = $this->arParams['REDIRECT_AUTH'] ?? '/';
+            $redirect = $this->arParams['REDIRECT_AUTH'];
 
-            LocalRedirect($redirect);
+            if($redirect) {
+                LocalRedirect($redirect);
+            } else {
+                $app = Application::getInstance();
+                $context = $app->getContext();
+                $request = $context->getRequest();
+                LocalRedirect($request->getRequestUri());
+            }
+
             return;
         }
         

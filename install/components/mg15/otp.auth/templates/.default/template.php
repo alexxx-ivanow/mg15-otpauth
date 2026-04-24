@@ -51,11 +51,11 @@ $this->setFrameMode(false);
 
         <div class="otp-row">
             <input
-                type="text"
+                type="number"
                 id="js-auth-code"
                 class="otp-input"
                 placeholder="6 цифр"
-                maxlength="6"
+                oninput="this.value = this.value.slice(0, 6)"
                 autocomplete="one-time-code"
             >
         </div>
