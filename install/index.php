@@ -23,7 +23,7 @@ class mg15_otpauth extends CModule
 
         $this->MODULE_VERSION = $arModuleVersion['VERSION'];
         $this->MODULE_VERSION_DATE = $arModuleVersion['VERSION_DATE'];
-        $this->MODULE_NAME = "OTP Auth";
+        $this->MODULE_NAME = "OTP-авторизация";
         $this->MODULE_DESCRIPTION = "Авторизация по коду email / phone из одного поля";
         $this->PARTNER_NAME = "Mg15";
     }
@@ -34,6 +34,7 @@ class mg15_otpauth extends CModule
 
         $this->installDB();
         $this->InstallEmailEvents();
+        $this->InstallUserEvents();
         $this->installFiles();
     }
 
@@ -41,6 +42,7 @@ class mg15_otpauth extends CModule
     {
         $this->uninstallFiles();
         $this->UnInstallEmailEvents();        
+        $this->UnInstallUserEvents();        
         $this->uninstallDB();
 
         ModuleManager::unRegisterModule($this->MODULE_ID);
@@ -55,11 +57,41 @@ class mg15_otpauth extends CModule
         return true;
     }
 
+    // метод для установки события обновления пользователя
+    function InstallUserEvents()
+    {
+
+        RegisterModuleDependences(
+            "main",
+            "OnBeforeUserUpdate",
+            $this->MODULE_ID,
+            Events::class,
+            "UpdateUserEventsHandler"
+        );     
+
+        return true;
+    }
+
     // метод для удаления почтовых событий и шаблонов
     function UnInstallEmailEvents()
     {
         Loader::includeModule($this->MODULE_ID);
         Events::UnInstallEvents();
+        return true;
+    }
+
+    // метод для удаления события обновления пользователя
+    function UnInstallUserEvents()
+    {
+        
+        UnRegisterModuleDependences(
+            "main",
+            "OnBeforeUserUpdate",
+            $this->MODULE_ID,
+            Events::class,
+            "UpdateUserEventsHandler"
+        );
+
         return true;
     }
 

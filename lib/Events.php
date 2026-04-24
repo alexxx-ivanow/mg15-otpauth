@@ -4,6 +4,7 @@ namespace Otp;
 
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\SiteTable;
+use Bitrix\Main\UserTable;
 use Bitrix\Main\Mail\Internal\EventTypeTable;
 use Bitrix\Main\Mail\Internal\EventMessageTable;
 
@@ -11,6 +12,50 @@ Loc::loadMessages(__FILE__);
 
 class Events
 {
+
+    public static function UpdateUserEventsHandler(&$fields)
+    {
+        global $APPLICATION;
+
+        if (empty($fields["PERSONAL_PHONE"]))
+        {
+            return true;
+        }
+
+        // нормализуем номер телефона
+        $phone = preg_replace('/\D+/', '', trim($fields["PERSONAL_PHONE"]));
+
+        // возвращаем нормализованный номер
+        $fields["PERSONAL_PHONE"] = $phone;
+
+        $filter = [
+            "=PERSONAL_PHONE" => $phone
+        ];
+
+        // исключаем текущего пользователя при редактировании
+        if (!empty($fields["ID"]))
+        {
+            $filter["!=ID"] = (int)$fields["ID"];
+        }
+
+        $exists = UserTable::getList([
+            "select" => ["ID"],
+            "filter" => $filter,
+            "limit" => 1
+        ])->fetch();
+
+        if ($exists)
+        {
+            $APPLICATION->ThrowException(
+                "Пользователь с таким телефоном уже существует"
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
     public static function InstallEvents()
     {
         $eventTypes = [
