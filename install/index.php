@@ -4,6 +4,7 @@ use Bitrix\Main\ModuleManager;
 use Bitrix\Main\Application;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Entity\Base;
+use Bitrix\Main\Config\Option;
 use Otp\Events;
 
 class mg15_otpauth extends CModule
@@ -44,6 +45,7 @@ class mg15_otpauth extends CModule
         $this->UnInstallEmailEvents();        
         $this->UnInstallUserEvents();        
         $this->uninstallDB();
+        $this->uninstallData();
 
         ModuleManager::unRegisterModule($this->MODULE_ID);
     }
@@ -135,4 +137,10 @@ class mg15_otpauth extends CModule
     {
         DeleteDirFilesEx("/local/components/mg15/otp.auth");
     }
+
+    function uninstallData()
+    {
+        Option::delete($this->MODULE_ID);
+    }
+
 }

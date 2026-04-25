@@ -8,30 +8,48 @@ use Bitrix\Main\Context;
 use Bitrix\Main\Config\Option;
 use CUser;
 
+use Otp\Contracts\SmsSenderInterface;
+use Otp\Sms\LogSmsSender;
+
+use Otp\Helper\Logger;
+
 class OtpService
 {
     private static $max_attempts = 3;
     private static $code_ttl_minutes = 5;
     private static $cooldown_seconds = 60;    
-    private static $add_group = '';    
+    private static $add_group = '';   
+    private static SmsSenderInterface $smsSender; 
+
+    public function __construct(?SmsSenderInterface $smsSender = null)
+    {
+        self::$smsSender = $smsSender ?: new LogSmsSender();        
+    }
 
     // отправка проверочного кода
     public static function send(string $login, array $config = []): array
     {
         $login = self::normalizeLogin($login);
+
         $type  = self::detectType($login);
 
-        self::applyConfig($config);
-
-        if (!$login) {
-            return self::error('Введите телефон или email');
+        if (!$type) {
+            return self::error('Введите корректный телефон или email');
         }
+    
+        self::applyConfig($config);
 
         if (self::isCooldown($login)) {
             return self::error('Повторная отправка через ' . self::$cooldown_seconds . ' секунд');
         }
 
         $code = self::generateCode();        
+
+        $send_result = self::sendCode($login, $code, $type);
+
+        if(!$send_result && $type === 'phone') {
+            return self::error('Ошибка отправки SMS. Попробуйте позже.');
+        }
 
         OtpTable::add([
             'LOGIN' => $login,
@@ -44,9 +62,15 @@ class OtpService
             'IP' => Context::getCurrent()->getRequest()->getRemoteAddress()
         ]);
 
-        self::sendCode($login, $code, $type);
+        if($type === 'email') {
+            return self::success('Код отправлен на Email');
+        }            
 
-        return self::success('Код отправлен');
+        if((new \ReflectionClass(self::$smsSender))->getShortName() === 'LogSmsSender') {
+            return self::success('Тестовый режим, код записан в лог');
+        }
+
+        return self::success('Код отправлен по СМС');
     }
 
     // проверка кода
@@ -199,15 +223,40 @@ class OtpService
 
 
     // отправка кода
-    private static function sendCode(string $login, string $code, string $type): void
+    private static function sendCode(string $login, string $code, string $type): bool
     {
         if ($type === 'email') {
             \CEvent::Send("OTP_CODE", SITE_ID, [
                 "EMAIL" => $login,
                 "CODE" => $code
             ]);
-        } else {
-            // TODO SMS API
+            return true;
+        }        
+
+        try {
+
+            $ok = self::$smsSender->send(
+                $login,
+                'Ваш код: ' . $code
+            );
+
+            if (!$ok) {
+                throw new \RuntimeException(
+                    'SMS provider returned error'
+                );
+            }
+
+            return true;
+
+        } catch (\Throwable $e) {
+
+            Logger::write(
+                'Телефон: ' . $login . ', ошибка: ' . $e->getMessage(),
+                'Ошибка отправки SMS', 
+                '/local/modules/mg15.otpauth/log/OtpService.log'
+            );
+
+            return false;
         }
     }
 
@@ -231,16 +280,30 @@ class OtpService
     }
 
     // helpers
-    private static function detectType(string $value): string
+    private static function detectType(string $value): string | null
     {
-        return filter_var($value, FILTER_VALIDATE_EMAIL)
-            ? 'email'
-            : 'phone';
+        $value = trim($value);
+
+        if (filter_var($value, FILTER_VALIDATE_EMAIL)) {
+            return 'email';
+        }
+
+        $digits = preg_replace('/\D+/', '', $value);
+
+        if (strlen($digits) >= 10) {
+            return 'phone';
+        }
+
+        return null;
     }
 
     private static function normalizeLogin(string $login): string
     {
         $login = trim($login);
+
+        if (!$login) {
+            return self::error('Введите телефон или email');
+        }
 
         if (self::detectType($login) === 'phone') {
             return preg_replace('/\D+/', '', $login);

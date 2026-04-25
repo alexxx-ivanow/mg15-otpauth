@@ -1,7 +1,11 @@
 <?php
 
 use Bitrix\Main\Loader;
+use Otp\Factory\SmsSenderFactory;
 use Otp\OtpService;
+use Bitrix\Main\Config\Option;
+
+use Otp\Helper\Logger;
 
 require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_before.php");
 
@@ -41,7 +45,56 @@ if (!$action) {
 // отправка кода
 if ($action === 'send') {
 
-    $result = OtpService::send($login, $config);
+    $moduleId = 'mg15.otpauth';
+
+    $currentProvider = Option::get(
+        $moduleId,
+        'sms_provider_class',
+        '\\Otp\\Sms\\LogSmsSender'
+    );
+
+    $apiKey = Option::get(
+        $moduleId,
+        'api_key',
+        ''
+    );
+
+    $apiLogin = Option::get(
+        $moduleId,
+        'api_login',
+        ''
+    );
+
+    $apiPass = Option::get(
+        $moduleId,
+        'api_pass',
+        ''
+    );
+
+    /*$provider = 'sms_ru'; // из настроек
+    $provider_config = [
+        'api_key' => '1234567'
+    ];*/
+
+    $provider = $currentProvider;
+
+    $provider_config = [
+        'api_key' => $apiKey,
+        'api_login' => $apiLogin,
+        'api_pass' => $apiPass,
+    ];
+
+    /*Logger::write(
+        $provider_config,
+        'Класс провайдера: ' . $provider, 
+        '/local/modules/mg15.otpauth/log/ajax.log'
+    );  */
+    
+    $sender = SmsSenderFactory::make($provider, $provider_config);
+
+    $service = new OtpService($sender);
+
+    $result = $service::send($login, $config);
 
     jsonResponse($result);
 }
