@@ -1,6 +1,6 @@
 <?
 
-namespace Otp;
+namespace Otp\Event;
 
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\SiteTable;

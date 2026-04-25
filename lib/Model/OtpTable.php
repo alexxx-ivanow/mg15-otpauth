@@ -1,6 +1,6 @@
 <?php
 
-namespace Otp;
+namespace Otp\Model;
 
 use Bitrix\Main\ORM\Data\DataManager;
 use Bitrix\Main\ORM\Fields;

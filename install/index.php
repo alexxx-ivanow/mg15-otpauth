@@ -5,7 +5,7 @@ use Bitrix\Main\Application;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Entity\Base;
 use Bitrix\Main\Config\Option;
-use Otp\Events;
+use Otp\Event\Events;
 
 class mg15_otpauth extends CModule
 {

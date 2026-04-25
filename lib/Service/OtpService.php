@@ -1,17 +1,16 @@
 <?php
 
-namespace Otp;
+namespace Otp\Service;
 
 use Bitrix\Main\UserTable;
 use Bitrix\Main\Type\DateTime;
 use Bitrix\Main\Context;
 use Bitrix\Main\Config\Option;
-use CUser;
-
+use Otp\Model\OtpTable;
 use Otp\Contracts\SmsSenderInterface;
 use Otp\Sms\LogSmsSender;
-
 use Otp\Helper\Logger;
+use CUser;
 
 class OtpService
 {

@@ -2,9 +2,8 @@
 
 use Bitrix\Main\Loader;
 use Otp\Factory\SmsSenderFactory;
-use Otp\OtpService;
+use Otp\Service\OtpService;
 use Bitrix\Main\Config\Option;
-
 use Otp\Helper\Logger;
 
 require($_SERVER["DOCUMENT_ROOT"] . "/bitrix/modules/main/include/prolog_before.php");
