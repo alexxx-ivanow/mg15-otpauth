@@ -62,6 +62,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
         'api_pass',
         $_POST['api_pass'] ?? ''
     );
+
+    Option::set(
+        $moduleId,
+        'timeout',
+        $_POST['timeout'] ?? ''
+    );
+
+    Option::set(
+        $moduleId,
+        'max_attempts',
+        $_POST['max_attempts'] ?? ''
+    );
+
+    Option::set(
+        $moduleId,
+        'code_ttl_minutes',
+        $_POST['code_ttl_minutes'] ?? ''
+    );
+
+    
+
 }
 
 $providers = getSmsProviders();
@@ -90,6 +111,24 @@ $apiPass = Option::get(
     ''
 );
 
+$timeout = Option::get(
+    $moduleId,
+    'timeout',
+    ''
+);
+
+$max_attempts = Option::get(
+    $moduleId,
+    'max_attempts',
+    ''
+);
+
+$code_ttl_minutes = Option::get(
+    $moduleId,
+    'code_ttl_minutes',
+    ''
+);
+
 
 $aTabs = [
     [
@@ -112,12 +151,16 @@ $tabControl->Begin();
 $tabControl->BeginNextTab();
 ?>
 
+<tr class="heading">
+    <td colspan="2">SMS шлюз</td>
+</tr>
+
 <tr>
     <td width="40%">
         SMS-провайдер:
     </td>
     <td width="60%">
-        <select name="sms_provider_class">
+        <select name="sms_provider_class" style="width:250px;">
 
             <?php foreach ($providers as $class => $title): ?>
 
@@ -175,6 +218,53 @@ $tabControl->BeginNextTab();
         >
     </td>
 </tr>
+
+<tr class="heading">
+    <td colspan="2">Защита</td>
+</tr>
+
+<tr>
+    <td>
+        Задержка отправки следующего проверочного кода (в сек), по умолчанию - 30:
+    </td>
+    <td>
+        <input
+            type="text"
+            name="timeout"
+            value="<?=htmlspecialcharsbx($timeout)?>"
+            size="30"
+        >
+    </td>
+</tr>
+
+<tr>
+    <td>
+        Максимальное количество попыток ввода проверочного кода, по умолчанию - 3:
+    </td>
+    <td>
+        <input
+            type="text"
+            name="max_attempts"
+            value="<?=htmlspecialcharsbx($max_attempts)?>"
+            size="30"
+        >
+    </td>
+</tr>
+
+<tr>
+    <td>
+        Время жизни проверочного кода (в мин), по умолчанию - 5:
+    </td>
+    <td>
+        <input
+            type="text"
+            name="code_ttl_minutes"
+            value="<?=htmlspecialcharsbx($code_ttl_minutes)?>"
+            size="30"
+        >
+    </td>
+</tr>
+
 
 <?php
 $tabControl->Buttons();

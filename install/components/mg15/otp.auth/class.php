@@ -4,6 +4,7 @@ if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die();
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Application;
+use Bitrix\Main\Config\Option;
 
 class OtpAuthComponent extends CBitrixComponent
 {
@@ -29,6 +30,12 @@ class OtpAuthComponent extends CBitrixComponent
 
             return;
         }
+
+        $this->arResult['COOLDOWN_SECONDS'] = (int) Option::get(
+            'mg15.otpauth',
+            'timeout',
+            30
+        );
         
         $this->includeComponentTemplate();
     }

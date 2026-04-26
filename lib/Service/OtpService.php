@@ -14,15 +14,19 @@ use CUser;
 
 class OtpService
 {
-    private static $max_attempts = 3;
-    private static $code_ttl_minutes = 5;
-    private static $cooldown_seconds = 60;    
+    private static $max_attempts;    
+    private static $code_ttl_minutes;    
+    private static $cooldown_seconds;    
     private static $add_group = '';   
     private static SmsSenderInterface $smsSender; 
 
     public function __construct(?SmsSenderInterface $smsSender = null)
     {
-        self::$smsSender = $smsSender ?: new LogSmsSender();        
+        self::$smsSender = $smsSender ?: new LogSmsSender();      
+
+        self::$max_attempts = (int) Option::get('mg15.otpauth', 'max_attempts', 3);
+        self::$code_ttl_minutes = (int) Option::get('mg15.otpauth', 'code_ttl_minutes', 5);
+        self::$cooldown_seconds = (int) Option::get('mg15.otpauth', 'timeout', 30);
     }
 
     // отправка проверочного кода
@@ -128,19 +132,7 @@ class OtpService
 
     // применяем конфиг из настроек компонента
     private static function applyConfig(array $config = []): void
-    {
-        if (!empty($config['max_attempts'])) {
-            self::$max_attempts = (int)$config['max_attempts'];
-        }
-
-        if (!empty($config['code_ttl_minutes'])) {
-            self::$code_ttl_minutes = (int)$config['code_ttl_minutes'];
-        }
-
-        if (!empty($config['cooldown_seconds'])) {
-            self::$cooldown_seconds = (int)$config['cooldown_seconds'];
-        }
-        
+    {               
         if (!empty($config['add_group'])) {
             self::$add_group = (string)$config['add_group'];
         }        

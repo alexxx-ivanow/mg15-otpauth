@@ -1,6 +1,8 @@
 <?php if (!defined("B_PROLOG_INCLUDED") || B_PROLOG_INCLUDED !== true) die(); 
 
 $this->setFrameMode(false);
+
+CJSCore::Init(['ajax']);
 ?>
 
 <div class="otp-auth" id="js-otp-auth" data-action="<?=$componentPath?>">
@@ -26,7 +28,8 @@ $this->setFrameMode(false);
         <div class="otp-hint" id="js-auth-hint"></div>
 
         <div class="otp-row">
-            <button type="button" class="otp-btn" id="js-send-code-btn">
+            
+            <button type="button" class="otp-btn" id="js-send-code-btn" data-seconds="0">
                 Получить код
             </button>
         </div>
@@ -80,10 +83,8 @@ $this->setFrameMode(false);
 
 
 <script>
-const otpConfig = {
-    max_attempts: '<?=CUtil::JSEscape($arParams["MAX_ATTEMPTS"])?>',
-    code_ttl_minutes: '<?=CUtil::JSEscape($arParams["CODE_TTL_MINUTES"])?>',
-    cooldown_seconds: '<?=CUtil::JSEscape($arParams["COOLDOWN_SECONDS"])?>',    
+const otpConfig = {    
     add_group: '<?=CUtil::JSEscape(implode(',', $arParams["ADD_GROUP"]))?>',
+    timeout: <?=(int)$arResult['COOLDOWN_SECONDS'] ?>
 };
 </script>

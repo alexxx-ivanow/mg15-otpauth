@@ -61,3 +61,7 @@
 .otp-success{
     color:#118800;
 }
+.otp-btn[disabled] {
+    opacity: 0.65;
+    cursor: default;
+}

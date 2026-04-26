@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function(){
     const stepCode    = document.getElementById('js-otp-step-code');
 
     const destination = document.getElementById('js-otp-destination');
+    const timeout = otpConfig.timeout || 30;
 
 
     nextBtn.style.display = 'none';
@@ -152,8 +153,10 @@ document.addEventListener('DOMContentLoaded', function(){
 
                 localStorage.setItem('otp_step', 'code');
 
-                /*const end = Date.now() + 60000;
-                localStorage.setItem('otp_timer_end', end);*/
+                startResendTimer(timeout, sendBtn);
+
+                const end = Date.now() + timeout * 1000;
+                localStorage.setItem('otp_timer_end', end);
             }
         });
 
@@ -196,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     });
 
-
+    // клик по кнопке Назад
     backBtn.addEventListener('click', function(){
 
         stepCode.style.display = 'none';
@@ -206,9 +209,8 @@ document.addEventListener('DOMContentLoaded', function(){
         clearMessage();
     });
 
+    // клик по кнопке Ввести код
     nextBtn.addEventListener('click', function(){
-
-        console.log(loginInput.value);
 
         if(loginInput.value != '') {
             stepCode.style.display = 'block';
@@ -218,6 +220,65 @@ document.addEventListener('DOMContentLoaded', function(){
             clearMessage();
         }
         
-    });
+    });   
+
+    // проверка задержки таймера
+    if (sendBtn) {       
+
+        let seconds = 0;
+        const timestamp = Number(localStorage.getItem('otp_timer_end')) || 0;
+
+        if(timestamp > 0) {
+            seconds = Math.max(0, parseInt((localStorage.getItem('otp_timer_end') - Date.now()) / 1000));                
+        }
+
+        if (seconds > 0) {
+            startResendTimer(seconds, sendBtn);
+        }
+
+    } 
 
 });
+
+/**
+ * Запуск таймера обратного отсчёта
+ *
+ * @param {Number} seconds       Количество секунд
+ * @param {String|HTMLElement} el  Элемент таймера
+ * @param {String|HTMLElement} btn Кнопка отправки
+ */
+function startResendTimer(seconds, btn) {
+    const button  = typeof btn === 'string' ? document.querySelector(btn) : btn;
+
+    if (!button) return;
+
+    let timeLeft = parseInt(seconds, 10);
+
+    if (timeLeft <= 0) {        
+        button.disabled = false;
+        return;
+    }
+
+    button.disabled = true;
+    button.dataset.seconds = timeLeft;
+
+    render();
+
+    const interval = setInterval(function () {
+        timeLeft--;
+        button.dataset.seconds = timeLeft;
+
+        render();
+
+        if (timeLeft <= 0) {
+            clearInterval(interval);
+            btn.innerHTML = 'Получить код';
+            button.disabled = false;
+            button.dataset.seconds = 0;
+        }
+    }, 1000);
+
+    function render() {
+        btn.innerHTML = 'Повторный код через ' + timeLeft + ' сек.';
+    }
+}

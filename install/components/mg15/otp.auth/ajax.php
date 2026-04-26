@@ -41,57 +41,48 @@ if (!$action) {
     ]);
 }
 
+$moduleId = 'mg15.otpauth';
+
+$currentProvider = Option::get(
+    $moduleId,
+    'sms_provider_class',
+    '\\Otp\\Sms\\LogSmsSender'
+);
+
+$apiKey = Option::get(
+    $moduleId,
+    'api_key',
+    ''
+);
+
+$apiLogin = Option::get(
+    $moduleId,
+    'api_login',
+    ''
+);
+
+$apiPass = Option::get(
+    $moduleId,
+    'api_pass',
+    ''
+);
+
+$provider = $currentProvider;
+
+$provider_config = [
+    'api_key' => $apiKey,
+    'api_login' => $apiLogin,
+    'api_pass' => $apiPass,
+];
+
+// из настроек модуля создаем объект СМС-провайдера
+$sender = SmsSenderFactory::make($provider, $provider_config);
+
+// получаем объект сервиса, передаем в конструктор объект СМС-провайдера
+$service = new OtpService($sender);
+
 // отправка кода
 if ($action === 'send') {
-
-    $moduleId = 'mg15.otpauth';
-
-    $currentProvider = Option::get(
-        $moduleId,
-        'sms_provider_class',
-        '\\Otp\\Sms\\LogSmsSender'
-    );
-
-    $apiKey = Option::get(
-        $moduleId,
-        'api_key',
-        ''
-    );
-
-    $apiLogin = Option::get(
-        $moduleId,
-        'api_login',
-        ''
-    );
-
-    $apiPass = Option::get(
-        $moduleId,
-        'api_pass',
-        ''
-    );
-
-    /*$provider = 'sms_ru'; // из настроек
-    $provider_config = [
-        'api_key' => '1234567'
-    ];*/
-
-    $provider = $currentProvider;
-
-    $provider_config = [
-        'api_key' => $apiKey,
-        'api_login' => $apiLogin,
-        'api_pass' => $apiPass,
-    ];
-
-    /*Logger::write(
-        $provider_config,
-        'Класс провайдера: ' . $provider, 
-        '/local/modules/mg15.otpauth/log/ajax.log'
-    );  */
-    
-    $sender = SmsSenderFactory::make($provider, $provider_config);
-
-    $service = new OtpService($sender);
 
     $result = $service::send($login, $config);
 
@@ -101,7 +92,7 @@ if ($action === 'send') {
 // проверка кода
 if ($action === 'check') {
 
-    $result = OtpService::check($login, $code, $config);
+    $result = $service::check($login, $code, $config);
 
     jsonResponse($result);
 }
