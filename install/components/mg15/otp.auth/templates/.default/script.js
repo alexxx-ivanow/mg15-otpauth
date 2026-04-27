@@ -20,6 +20,8 @@ document.addEventListener('DOMContentLoaded', function(){
     const destination = document.getElementById('js-otp-destination');
     const timeout = otpConfig.timeout || 30;
 
+    let emailMode = false;
+
 
     nextBtn.style.display = 'none';
 
@@ -56,15 +58,26 @@ document.addEventListener('DOMContentLoaded', function(){
     {
         value = value.trim();
 
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-        if (emailPattern.test(value)) {
-            return 'email';
+        if (!value) {
+            return 'unknown';
         }
 
-        const digits = value.replace(/\D/g,'');
 
-        if (digits.length >= 6) {
+        // Если есть @ — это email
+        if (value.includes('@')) {
+
+            const emailPattern =
+                /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            return emailPattern.test(value)
+                ? 'email'
+                : 'unknown';
+        }
+
+        // Иначе проверяем телефон
+        const digits = value.replace(/\D/g, '');
+
+        if (digits.length >= 10) {
             return 'phone';
         }
 
@@ -90,28 +103,56 @@ document.addEventListener('DOMContentLoaded', function(){
         return result;
     }
 
-    loginInput.addEventListener('input', function(){
+    loginInput.addEventListener('input', function () {
 
         let value = this.value;
-        let type = detectType(value);
 
-        if (type === 'phone') {
-            this.value = formatPhone(value);
+
+        // Если впервые появился @
+        if (value.includes('@') && !emailMode) {
+
+            emailMode = true;
+
+            //Один раз убираем телефонную маску            
+            value = value.replace(/[+\-\s()]/g, '');
+
+            this.value = value;
+        }
+
+
+        // Если @ удалили — возвращаем phone mode
+        if (!value.includes('@')) {
+            emailMode = false;
+        }
+
+        const type = detectType(this.value);
+
+        if (!emailMode && type === 'phone') {
+
+            this.value = formatPhone(this.value);
             hint.innerHTML = 'Код придёт по SMS';
+
         } else if (type === 'email') {
+
             hint.innerHTML = 'Код придёт на email';
+
         } else {
+
             hint.innerHTML = '';
         }
 
-        if(value == '') {
-            nextBtn.style.display = 'none';    
-        } else if(localStorage.getItem('otp_step') === 'code') {
+        if (this.value === '') {
+            nextBtn.style.display = 'none';
+        } else if (
+            localStorage.getItem('otp_step') === 'code'
+        ) {
             nextBtn.style.display = 'block';
         }
-        
-        
-        localStorage.setItem('otp_login', this.value);
+
+        localStorage.setItem(
+            'otp_login',
+            this.value
+        );
     });
 
 
@@ -244,7 +285,6 @@ document.addEventListener('DOMContentLoaded', function(){
  * Запуск таймера обратного отсчёта
  *
  * @param {Number} seconds       Количество секунд
- * @param {String|HTMLElement} el  Элемент таймера
  * @param {String|HTMLElement} btn Кнопка отправки
  */
 function startResendTimer(seconds, btn) {
