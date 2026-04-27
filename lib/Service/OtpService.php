@@ -9,6 +9,7 @@ use Bitrix\Main\Config\Option;
 use Otp\Model\OtpTable;
 use Otp\Contracts\SmsSenderInterface;
 use Otp\Sms\LogSmsSender;
+use Otp\Mail\MailSender;
 use Otp\Helper\Logger;
 use CUser;
 
@@ -24,9 +25,34 @@ class OtpService
     {
         self::$smsSender = $smsSender ?: new LogSmsSender();      
 
-        self::$max_attempts = (int) Option::get('mg15.otpauth', 'max_attempts', 3);
-        self::$code_ttl_minutes = (int) Option::get('mg15.otpauth', 'code_ttl_minutes', 5);
-        self::$cooldown_seconds = (int) Option::get('mg15.otpauth', 'timeout', 30);
+
+        $max_attempts = (int) Option::get(
+            'mg15.otpauth',
+            'max_attempts',
+            3
+        );
+        self::$max_attempts = $max_attempts > 0
+            ? $max_attempts
+            : 3;
+
+        $code_ttl_minutes = (int) Option::get(
+            'mg15.otpauth',
+            'code_ttl_minutes',
+            3
+        );
+        self::$code_ttl_minutes = $code_ttl_minutes > 0
+            ? $code_ttl_minutes
+            : 5;
+
+
+        $cooldown_seconds = (int) Option::get(
+            'mg15.otpauth',
+            'code_ttl_minutes',
+            30
+        );
+        self::$cooldown_seconds = $cooldown_seconds > 0
+            ? $cooldown_seconds
+            : 30;
     }
 
     // отправка проверочного кода
@@ -217,10 +243,28 @@ class OtpService
     private static function sendCode(string $login, string $code, string $type): bool
     {
         if ($type === 'email') {
-            \CEvent::Send("OTP_CODE", SITE_ID, [
-                "EMAIL" => $login,
-                "CODE" => $code
+            $emailSender = Option::get('mg15.otpauth', 'email_sender', 'cevent');
+
+            if ($emailSender === 'phpmailer') {
+                $sent = MailSender::sendOtpCode($login, $code);
+
+                if (!$sent) {
+                    Logger::write(
+                        'Email: ' . $login . ', код не отправлен через PHPMailer.',
+                        'Ошибка sendCode (email / PHPMailer)',
+                        '/local/modules/mg15.otpauth/log/OtpService.log'
+                    );
+                }
+
+                return $sent;
+            }
+
+            // Стандартный метод — очередь b_event
+            \CEvent::Send('OTP_CODE', SITE_ID, [
+                'EMAIL' => $login,
+                'CODE'  => $code,
             ]);
+
             return true;
         }        
 
