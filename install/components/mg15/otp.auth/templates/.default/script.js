@@ -113,8 +113,14 @@ document.addEventListener('DOMContentLoaded', function(){
 
             emailMode = true;
 
-            //Один раз убираем телефонную маску            
-            value = value.replace(/[+\-\s()]/g, '');
+            //Один раз убираем телефонную маску, кроме дефиса
+            value = value.replace(/[+\s()]/g, '');
+
+            // убирае дефис, если только цифры в строке
+            const hasLatin = /[a-zA-Z]/.test(value);
+            if(!hasLatin) {
+                value = value.replace(/[\-]/g, '');
+            }
 
             this.value = value;
         }
@@ -166,6 +172,8 @@ document.addEventListener('DOMContentLoaded', function(){
             showMessage('Введите телефон или email');
             return;
         }
+
+        nextBtn.style.display = 'block';
 
         BX.ajax({
             url: actionPath + '/ajax.php',
